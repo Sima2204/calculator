@@ -31,18 +31,21 @@ document.querySelector('.buttons').addEventListener('click', event => {
     if (digits.includes(key)) {
         if (second === '' && operator === '') {
 
-            if (first.length < 10) {
+            if (first.length <= 9) {
                 if (first === '0' && key === '0') {
                     first = '0';
                     out.textContent = first; 
-                } else if (first === '0' && key !== '0' && key !== '.') {
+                } else if (first === '' && key !== '0' && key !== '.') {
                     first = key;
                     out.textContent = first; 
+                } else if (first === '' && key === '.') {
+                    first = '0' + key;
+                    out.textContent = first;
                 } else {
                     first += key;
                     out.textContent = first;
                 }
-            } else {
+            } else if (first.length > 9) {
                 alert("Max 10 digits possible!");
                 out.textContent = first;
             }
@@ -53,18 +56,21 @@ document.querySelector('.buttons').addEventListener('click', event => {
             out.textContent = second;
         } else {
 
-            if (second.length < 10) {
+            if (second.length <= 9) {
                 if (second === '0' && key === '0') {
                     second = '0';
                     out.textContent = second; 
-                } else if (second === '0' && key !== '0' && key !== '.') {
+                } else if (second === '' && key !== '0' && key !== '.') {
                     second = key;
                     out.textContent = second; 
+                } else if (second === '' && key === '.') {
+                    second = '0' + key;
+                    out.textContent = second;
                 } else {
                     second += key;
                     out.textContent = second;
                 } 
-            } else {
+            } else if (second.length > 9) {
                 alert("Max 10 digits possible!")
                 out.textContent = second;
             }
@@ -93,7 +99,7 @@ document.querySelector('.buttons').addEventListener('click', event => {
                 break;
             case "-":
                 if (+first < 1 && +second < 1) {
-                    first = (first * 10 - second * 10) / 10;
+                    first = (first * 100 - second * 100) / 100;
                     break;
                 }
                 first = (+first) - (+second);
@@ -190,5 +196,3 @@ document.querySelector('.buttons').addEventListener('click', event => {
     }
 
 });
-
-
