@@ -1,6 +1,8 @@
 let first = ''; // first number
 let second = ''; // second number
 let operator = ''; // operator
+let previousButton = '';
+let currentButton = '';
 let finish = false;
 
 const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'];
@@ -11,6 +13,8 @@ function clearAll () {
     first = '';
     second = '';
     operator = '';
+    previousButton = '';
+    currentButton = '';
     finish = false;
     out.textContent = 0;
 }
@@ -19,68 +23,63 @@ document.querySelector('.reset').addEventListener('click', clearAll);
 
 document.querySelector('.buttons').addEventListener('click', event => {
 
-    if(!event.target.classList.contains('button')) return;
-    if(event.target.classList.contains('reset')) return;
-
+    if(!event.target.classList.contains('button') || event.target.classList.contains('reset')) return;
+    
     out.textContent = '';
 
     // receiving pushed button
+    previousButton = currentButton;
     const key = event.target.textContent;
+    currentButton = key;
 
     // if pushed digits
     if (digits.includes(key)) {
         if (second === '' && operator === '') {
-
+            
             if (first.length <= 9) {
-                if (first === '0' && key === '0') {
+                if (first === '0' && key === '0') { //avoiding double 0 in begin
                     first = '0';
-                    out.textContent = first; 
-                } else if (first === '' && key !== '0' && key !== '.') {
-                    first = key;
-                    out.textContent = first; 
-                } else if (first === '' && key === '.') {
+                } else if (first === '' && key === '.') { // making 0.n correct
                     first = '0' + key;
-                    out.textContent = first;
+                } else if (first === '0' && key !== '.') {
+                    first = key;
                 } else {
                     first += key;
-                    out.textContent = first;
                 }
             } else if (first.length > 9) {
                 alert("Max 10 digits possible!");
-                out.textContent = first;
             }
+            out.textContent = first;
             
         } else if (first !== '' && second !== '' && finish) {
-            second = key;
+            second += key;
             finish = false;
             out.textContent = second;
         } else {
-
+            
             if (second.length <= 9) {
-                if (second === '0' && key === '0') {
+                if (second === '0' && key === '0') { //avoiding double 0 in begin
                     second = '0';
-                    out.textContent = second; 
-                } else if (second === '' && key !== '0' && key !== '.') {
-                    second = key;
-                    out.textContent = second; 
-                } else if (second === '' && key === '.') {
+                } else if (second === '' && key === '.') { // making 0.n correct
                     second = '0' + key;
-                    out.textContent = second;
+                } else if (second === '0' && key !== '.') {
+                    second = key;
                 } else {
                     second += key;
-                    out.textContent = second;
                 } 
             } else if (second.length > 9) {
                 alert("Max 10 digits possible!")
-                out.textContent = second;
             }
-
+            out.textContent = second;
+            finish = false;
+            
         }
+
         return;
     };
 
     // if pushed actions 
-    if (actions.includes(key)) {
+    if (actions.includes(key) && operator === '') {
         operator = key;
         out.textContent = operator;
         return;
@@ -88,64 +87,25 @@ document.querySelector('.buttons').addEventListener('click', event => {
 
     // if pushed equal
     if (key === '=') {
-        if (second === '') second = first;
-        switch (operator) {
-            case "+":
-                if (+first < 1 && +second < 1) {
-                    first = (first * 10 + second * 10) / 10;
-                    break;
-                }
-                first = (+first) + (+second);
-                break;
-            case "-":
-                if (+first < 1 && +second < 1) {
-                    first = (first * 100 - second * 100) / 100;
-                    break;
-                }
-                first = (+first) - (+second);
-                break;
-            case "*":
-                if (+first < 1 && +second < 1) {
-                    first = (first * 10 * second * 10) / 100;
-                    break;
-                }
-                first = (+first) * (+second);
-                break;
-            case "÷":
-                if (second === '0') {
-                    out.textContent = 'Error';
-                    first = '';
-                    second = '';
-                    operator = '';
-                    return;
-                } else if (+first < 1 && +second < 1) {
-                    first = (first * 10 + second * 10) / 10;
-                    break;
-                } else {
-                    first = (+first) / (+second);
-                    break;
-                }
-            case '^':
-                first = Math.pow(+first, +second);
-                break;
-            case '√':
-                if (Math.sign(first) === -1) {
-                    out.textContent = 'Error';
-                    first = '';
-                    second = '';
-                    operator = '';
-                    return;
-                } else {
-                    first = Math.sqrt(first);
-                    second = '';
-                    break;
-                };   
-        }
-
+        equal();
         finish = true;
-        out.textContent = first.toString().slice(0, 10);    
-
+        out.textContent = first.toString().slice(0, 10); 
+        operator = '';
+        second = '';
     }
+
+    // if equal not pushed, and new action pushed
+    if (actions.includes(key) && operator !== '') {
+
+        if (!(actions.includes(previousButton) && actions.includes(currentButton))) {
+            equal();
+            second = '';
+        }
+        operator = key;
+        second = '';
+        out.textContent = first.toString().slice(0, 10); 
+        finish = true;    
+    };
 
     // if pushed DEL
     if (key === 'DEL') {
@@ -156,6 +116,7 @@ document.querySelector('.buttons').addEventListener('click', event => {
             operator = '';
             finish = false;
             out.textContent = first;
+            
         } else if (second === '' && operator === '') {
             first = first.toString().slice(0, -1);
             if (first.length >= 1) {
@@ -179,20 +140,91 @@ document.querySelector('.buttons').addEventListener('click', event => {
     // if pushed negative
     if (key === '+/-') {
 
-        if (finish === true) {
-            first = first * -1;
+        if (out.textContent === first && first === '') {
+            console.log('popalo v -FIRST');
+            first = '-' + first;
+            out.textContent = first;
+        } else if (out.textContent === second && screen === '') {
+            console.log('popalo v -SECOND');
+            second = '-' + second;
+            out.textContent = second;
+        } else if (finish === true) {
+            first = '-' + first;
             second = '';
             operator = '';
             finish = false;
             out.textContent = first;
+            console.log('popalo v finish TRUE');
         } else if (second === '' && operator === '') {
-            first = first * -1;
+            first = '-' + first;
             out.textContent = first;
+            console.log('popalo v second none + operator none');
         } else if (first !== '' && operator !== '') {
-            second = second * -1;
+            second = '-' + second;
             out.textContent = second;
-        } 
+            console.log('popalo v first EST + operator EST');
+        }
 
     }
 
 });
+
+function equal () {
+    if (second === '') second = first;
+    switch (operator) {
+        case "+":
+            if (+first < 1 && +second < 1) {
+                first = (first * 10 + second * 10) / 10;
+                break;
+            }
+            first = (+first) + (+second);
+            break;
+        case "-":
+            if (+first < 1 && +second < 1) {
+                first = (first * 100 - second * 100) / 100;
+                break;
+            }
+            first = (+first) - (+second);
+            break;
+        case "*":
+            if (+first < 1 && +second < 1) {
+                first = (first * 10 * second * 10) / 100;
+                break;
+            }
+            first = (+first) * (+second);
+            break;
+        case "÷":
+            if (second === '0') {
+                out.textContent = 'Error';
+                first = '';
+                second = '';
+                operator = '';
+                return;
+            } else if (+first < 1 && +second < 1) {
+                first = (first * 10 + second * 10) / 10;
+                break;
+            } else {
+                first = (+first) / (+second);
+                break;
+            }
+        case '^':
+            first = Math.pow(+first, +second);
+            break;
+        case '√':
+            if (Math.sign(first) === -1) {
+                out.textContent = 'Error';
+                first = '';
+                second = '';
+                operator = '';
+                return;
+            } else {
+                first = Math.sqrt(first);
+                second = '';
+                break;
+            };   
+    }
+    finish = true;
+    
+    console.log(first + operator + second + finish);
+
+};
